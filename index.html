@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fantasy Football 2 Player</title>
+<style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #0a3d0a; color: white; margin: 0; padding: 20px; }
+    #gameCanvas { background: #1a5c1a; border: 3px solid white; display: none; margin: 20px auto; }
+   .menu { max-width: 400px; margin: 50px auto; padding: 20px; background: #222; border-radius: 10px; }
+    input, button { padding: 10px; margin: 5px; font-size: 16px; border-radius: 5px; border: none; }
+    button { background: #ffaa00; color: black; cursor: pointer; font-weight: bold; }
+    button:hover { background: #ffcc00; }
+    #codeDisplay { font-size: 24px; color: #00ff00; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>🏈 FANTASY FOOTBALL 🏈</h1>
+
+<div class="menu" id="menu">
+    <button onclick="hostGame()">HOST GAME</button>
+    <br><br>
+    <input type="text" id="joinCode" placeholder="Enter 4-digit Code">
+    <button onclick="joinGame()">JOIN GAME</button>
+    <p id="status">Status: Waiting...</p>
+    <p>Your Code: <span id="codeDisplay">----</span></p>
+</div>
+
+<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<script>
+let SERVER_URL = 'wss://fantasy-football-tzpy.onrender.com'; // YOUR LIVE SERVER
+let ws;
+let roomCode;
+let playerNum;
+let gameStarted = false;
+let ball = {x: 400, y: 250, vx: 0, vy: 0};
+let players = [
+    {x: 200, y: 250, color: 'blue'},
+    {x: 600, y: 250, color: 'red'}
+];
+let keys = {};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function connect() {
+    ws = new WebSocket(SERVER_URL);
+    ws.onopen = () => { document.getElementById('status').innerText = 'Status: Connected to Server'; }
+    ws.onmessage = (e) => {
+        let data = JSON.parse(e.data);
+        if(data.type === 'hosted'){
+            roomCode = data.code;
+            document.getElementById('codeDisplay').innerText = roomCode;
+            document.getElementById('status').innerText = 'Status: Waiting for player 2...';
+        }
+        if(data.type === 'start'){
+            gameStarted = true;
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            gameLoop();
+        }
+        if(data.type === 'update'){
+            ball = data.ball;
+            players = data.players;
+        }
+        if(data.type === 'error'){
+            alert(data.msg);
+        }
+    }
+    ws.onclose = () => { document.getElementById('status').innerText = 'Status: Disconnected'; }
+}
+
+function hostGame() {
+    connect();
+    setTimeout(() => { ws.send(JSON.stringify({type: 'host'})); }, 500);
+}
+
+function joinGame() {
+    let code = document.getElementById('joinCode').value;
+    if(code.length!== 4) { alert('Enter 4 digit code'); return; }
+    connect();
+    setTimeout(() => { ws.send(JSON.stringify({type: 'join', code: parseInt(code)})); }, 500);
+}
+
+document.addEventListener('keydown', e => { keys[e.key] = true; });
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+function updateGame() {
+    if(!gameStarted) return;
+    let speed = 5;
+    if(playerNum === 1) {
+        if(keys['w']) players[0].y -= speed;
+        if(keys['s']) players[0].y += speed;
+        if(keys['a']) players[0].x -= speed;
+        if(keys['d']) players[0].x += speed;
+    }
+    if(playerNum === 2) {
+        if(keys['ArrowUp']) players[1].y -= speed;
+        if(keys['ArrowDown']) players[1].y += speed;
+        if(keys['ArrowLeft']) players[1].x -= speed;
+        if(keys['ArrowRight']) players[1].x += speed;
+    }
+    ws.send(JSON.stringify({type: 'update', ball: ball, players: players}));
+}
+
+function drawGame() {
+    ctx.clearRect(0,0,800,500);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 250, 800, 2); // Mid line
+    ctx.beginPath(); ctx.arc(400, 250, 50, 0, Math.PI*2); ctx.strokeStyle='white'; ctx.stroke(); // Center circle
+
+    // Draw Players
+    players.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, Math.PI*2); ctx.fill();
+    });
+
+    // Draw Ball
+    ctx.fillStyle = 'brown';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, 8, 0, Math.PI*2); ctx.fill();
+}
+
+function gameLoop() {
+    updateGame();
+    drawGame();
+    requestAnimationFrame(gameLoop);
+}
+
+// Get player number from server message - add this to onmessage
+ws.onmessage = (e) => {
+    let data = JSON.parse(e.data);
+    if(data.type === 'hosted'){
+        roomCode = data.code; playerNum = 1;
+        document.getElementById('codeDisplay').innerText = roomCode;
+        document.getElementById('status').innerText = 'Status: Waiting for player 2...';
+    }
+    if(data.type === 'start'){ playerNum = 2; gameStarted = true;
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('gameCanvas').style.display = 'block';
+        gameLoop();
+    }
+    if(data.type === 'update'){ ball = data.ball; players = data.players; }
+    if(data.type === 'error'){ alert(data.msg); }
+}
+</script>
+</body>
+</html>
