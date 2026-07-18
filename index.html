@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DLS 2026 v3.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{margin:0;padding:0}
+body{background:#0a3d0a;overflow:hidden;font-family:Arial}
+#canvas{background:linear-gradient(#0db40d,#0a8a0a);display:none}
+.menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#000e;padding:30px;border-radius:15px;color:#fff;text-align:center}
+button{padding:15px 30px;background:#ffaa00;border:0;border-radius:10px;font-weight:900;font-size:18px}
+#hud{position:absolute;top:10px;width:100%;text-align:center;font-size:24px;color:#fff;font-weight:900;background:#0008;padding:5px}
+
+/* MOBILE DLS STYLE CONTROLS */
+.control{position:absolute;width:70px;height:70px;border-radius:50%;background:#ffffff22;border:2px solid #fff;color:#fff;font-weight:900;font-size:16px;display:none}
+#dpad{bottom:20px;left:20px;width:160px;height:160px}
+.dir{position:absolute;width:50px;height:50px}
+#up{top:0;left:55px} #down{bottom:0;left:55px} #left{top:55px;left:0} #right{top:55px;right:0}
+#shootBtn{bottom:80px;right:30px;background:#ff0000} 
+#passBtn{bottom:80px;right:110px;background:#0088ff}
+#sprintBtn{bottom:160px;right:30px;background:#ffff00;color:#000}
+</style>
+</head>
+<body>
+<div id="hud">0 - 0 | 45:00</div>
+<div class="menu" id="menu"><h2>🏆 DLS 2026 v3.0 🏆</h2>
+<button onclick="start()">PLAY NOW</button>
+<p style="margin-top:10px">PC: WASD + SPACE + E + F</p></div>
+<canvas id="canvas" width="1200" height="700"></canvas>
+
+<div id="dpad" class="control">
+<button class="dir" id="up">↑</button><button class="dir" id="down">↓</button>
+<button class="dir" id="left">←</button><button class="dir" id="right">→</button>
+</div>
+<button class="control" id="shootBtn">SHOOT</button>
+<button class="control" id="passBtn">PASS</button>
+<button class="control" id="sprintBtn">SPRINT</button>
+
+<script>
+const c=document.getElementById('canvas'),x=c.getContext('2d');
+let k={},game=0,ball={x:600,y:350,vx:0,vy:0},t1=[],t2=[],sc=[0,0],pow=0,charge=0,me=5,clock=2700;
+
+function teams(){t1=[];t2=[];let pos=[[60,350],[160,130],[160,270],[160,430],[160,570],[280,200],[280,350],[280,500],[400,250],[400,450],[520,350]];
+pos.forEach((v,i)=>{t1.push({x:v[0],y:v[1],ox:v[0],oy:v[1],team:1,n:i+1});t2.push({x:1200-v[0],y:v[1],ox:1200-v[0],oy:v[1],team:2,n:i+1})})}
+
+function drawPlayer(pl,isMe){
+  let col = pl.team===1?'#0055ff':'#ff0000';
+  let yOff = isMe?-3:0; // bounce when selected
+  
+  // Body - Jersey
+  x.fillStyle=col; x.beginPath(); x.ellipse(pl.x,pl.y+yOff,12,16,0,0,7); x.fill();
+  // Head
+  x.fillStyle='#fdb'; x.beginPath(); x.arc(pl.x,pl.y-18+yOff,8,0,7); x.fill();
+  // Shorts
+  x.fillStyle='#222'; x.fillRect(pl.x-8,pl.y+2+yOff,16,10);
+  // Number
+  x.fillStyle='#fff'; x.font='bold 9px Arial'; x.textAlign='center'; x.fillText(pl.n,pl.x,pl.y+4+yOff);
+  // Selection ring
+  if(isMe){x.strokeStyle='yellow';x.lineWidth=3;x.beginPath();x.arc(pl.x,pl.y+15+yOff,18,0,7);x.stroke()}
+}
+
+function pitch(){x.fillStyle='#0db40d';x.fillRect(0,0,1200,700);x.strokeStyle='#fff';x.lineWidth=2;x.strokeRect(0,0,1200,700);
+x.beginPath();x.moveTo(600,0);x.lineTo(600,700);x.stroke();x.beginPath();x.arc(600,350,80,0,7);x.stroke();
+x.fillRect(0,240,100,220);x.fillRect(1100,240,100,220);x.fillRect(0,290,50,120);x.fillRect(1150,290,50,120)}
+
+function draw(){pitch();[...t1,...t2].forEach((pl,i)=>drawPlayer(pl,(p===1&&i===me)||(p===2&&i===me+11)));
+x.fillStyle='#fff';x.beginPath();x.arc(ball.x,ball.y,6,0,7);x.fill()}
+
+function ai(){t2.forEach(pl=>{let d=Math.hypot(ball.x-pl.x,ball.y-pl.y);
+if(d<200){if(pl.x<ball.x)pl.x+=2;if(pl.y<ball.y)pl.y+=2;if(pl.x>ball.x)pl.x-=2;if(pl.y>ball.y)pl.y-=2;}
+else{if(Math.abs(pl.x-pl.ox)>1)pl.x+=pl.x<pl.ox?1:-1;if(Math.abs(pl.y-pl.oy)>1)pl.y+=pl.y<pl.oy?1:-1;}})}
+
+let p=1; // player team
+function loop(){if(!game)return;draw();ai();
+let ply=p===1?t1[me]:t2[me];let spd=k['Shift']||k['sprint']?7:4.5;
+if(k['w']||k['up'])ply.y-=spd;if(k['s']||k['down'])ply.y+=spd;if(k['a']||k['left'])ply.x-=spd;if(k['d']||k['right'])ply.x+=spd;
+ply.x=Math.max(20,Math.min(1180,ply.x));ply.y=Math.max(20,Math.min(680,ply.y));
+
+if(charge){pow+=3;if(pow>100)pow=100;}
+ball.x+=ball.vx;ball.y+=ball.vy;ball.vx*=0.98;ball.vy*=0.98;
+if(ball.x<15&&ball.y>290&&ball.y<410){sc[1]++;reset()}if(ball.x>1185&&ball.y>290&&ball.y<410){sc[0]++;reset()}
+clock--;document.getElementById('hud').innerText=`${sc[0]} - ${sc[1]} | ${Math.floor(clock/60)}:${('0'+clock%60).slice(-2)}`;
+requestAnimationFrame(loop)}
+function reset(){ball={x:600,y:350,vx:0,vy:0};teams()}
+
+function shoot(){let ply=p===1?t1[me]:t2[me];ball.x=ply.x+15;ball.y=ply.y;ball.vx=pow/6;ball.vy=0;pow=0}
+function pass(){let ply=p===1?t1[me]:t2[me];let team=p===1?t1:t2;let tar=team.filter((_,i)=>i!==me).reduce((a,b)=>Math.hypot(a.x-ply.x,a.y-ply.y)<Math.hypot(b.x-ply.x,b.y-ply.y)?a:b);
+ball.vx=(tar.x-ply.x)/15;ball.vy=(tar.y-ply.y)/15}
+
+onkeydown=e=>{k[e.key]=1;if(e.key===' ')charge=1}
+onkeyup=e=>{k[e.key]=0;if(e.key===' '){charge=0;shoot()}if(e.key==='e')pass();if(e.key==='f'){let ply=p===1?t1[me]:t2[me];if(Math.hypot(ball.x-ply.x,ball.y-ply.y)<20){ball.x=ply.x;ball.y=ply.y;ball.vx=ball.vy=0}}}
+
+// MOBILE
+['up','down','left','right'].forEach(id=>{document.getElementById(id).ontouchstart=()=>k[id]=1;document.getElementById(id).ontouchend=()=>k[id]=0});
+document.getElementById('shootBtn').ontouchend=()=>{shoot()};
+document.getElementById('passBtn').ontouchend=()=>{pass()};
+document.getElementById('sprintBtn').ontouchstart=()=>k['sprint']=1;document.getElementById('sprintBtn').ontouchend=()=>k['sprint']=0;
+
+function start(){game=1;teams();document.getElementById('menu').style.display='none';c.style.display='block';document.querySelectorAll('.control').forEach(b=>b.style.display='block');loop()}
+</script>
+</body>
+</html>
