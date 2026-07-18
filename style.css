@@ -1,0 +1,14 @@
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Arial Black',sans-serif}
+#game{background:linear-gradient(#0d8a0d,#0a6a0a);display:none}
+#hud{position:absolute;top:10px;width:100%;text-align:center;font-size:28px;color:#fff;text-shadow:2px 2px 4px #000;z-index:10}
+#hud span{margin:0 30px;background:#0008;padding:5px 15px;border-radius:10px}
+#menu{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#000e;padding:40px;border-radius:20px;color:#fff;text-align:center;z-index:100}
+#menu button{padding:15px 40px;background:#ffaa00;border:0;border-radius:12px;font-weight:900;font-size:20px;cursor:pointer;margin-top:15px}
+#controls.btn{position:absolute;width:70px;height:70px;border-radius:50%;background:#ffffff20;border:2px solid #fff;color:#fff;font-weight:900;display:none}
+#shoot{bottom:90px;right:40px;background:#ff0000;width:85px;height:85px}
+#pass{bottom:90px;right:140px;background:#0088ff}
+#sprint{bottom:170px;right:40px;background:#ffff00;color:#000}
+.dpad{position:absolute;bottom:20px;left:20px;width:160px;height:160px}
+.dpad button{position:absolute;width:50px;height:50px;background:#ffffff20;border:2px solid #fff;border-radius:12px;color:#fff;font-size:22px}
+#up{top:0;left:55px} #down{bottom:0;left:55px} #left{top:55px;left:0} #right{top:55px;right:0}
