@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DLS 2026</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="hud">
+  <span id="score">0 - 0</span>
+  <span id="timer">45:00</span>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="menu">
+  <h1>🏆 DLS 2026 🏆</h1>
+  <button onclick="startGame()">KICK OFF</button>
+  <p>PC: WASD + SPACE + E + F + TAB</p>
+</div>
+
+<div id="controls">
+  <div class="dpad">
+    <button id="up">↑</button><button id="down">↓</button>
+    <button id="left">←</button><button id="right">→</button>
+  </div>
+  <button id="shoot">SHOOT</button>
+  <button id="pass">PASS</button>
+  <button id="sprint">SPRINT</button>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
