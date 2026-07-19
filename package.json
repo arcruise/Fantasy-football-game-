@@ -1,0 +1,170 @@
+
+package_json = '''{
+  "name": "efootball-online-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for eFootball Pro online multiplayer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+'''
+
+readme = '''# eFootball Pro - Online Multiplayer Setup
+
+## Files Included
+- `efootball_online.html` - The game client (play in browser)
+- `server.js` - Node.js WebSocket game server
+- `package.json` - Node dependencies
+
+## Quick Start
+
+### 1. Install Node.js
+Download from https://nodejs.org/ (LTS version recommended)
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Start the Server
+```bash
+npm start
+```
+
+The server will start on port 3000 by default.
+
+### 4. Find Your Server IP
+
+**Windows:**
+```cmd
+ipconfig
+```
+Look for `IPv4 Address` under your WiFi or Ethernet adapter.
+
+**Mac/Linux:**
+```bash
+ifconfig
+# or
+ip addr
+```
+
+### 5. Host a Game
+
+1. Open browser, go to `http://YOUR_IP:3000`
+2. Click **Online Multiplayer**
+3. Enter your server IP (or leave as `localhost` if same machine)
+4. Click **Host Game**
+5. Share the 4-digit room code with your friend
+
+### 6. Join a Game
+
+1. Open browser, go to `http://YOUR_IP:3000`
+2. Click **Online Multiplayer**
+3. Enter the same server IP
+4. Click **Join Game**
+5. Enter the 4-digit room code
+6. Select your team and click **Ready**
+
+## WiFi / Hotspot Play
+
+### Option A: Same WiFi Network
+- Host runs the server on their PC
+- Both players connect to the same WiFi
+- Players use the host PC's local IP (e.g., `192.168.1.5`)
+
+### Option B: Mobile Hotspot
+1. Host turns on mobile hotspot
+2. Host PC connects to the hotspot
+3. Friend's device connects to the same hotspot
+4. Use the host PC's IP on the hotspot network
+5. Server runs on host PC
+
+### Option C: Deploy to Cloud (Play anywhere)
+Deploy the server to a free service like:
+- **Render.com** (free tier)
+- **Railway.app** (free tier)
+- **Fly.io** (free tier)
+- **Heroku** (free tier available)
+
+Then both players connect using the cloud URL.
+
+## Controls (Online Mode)
+
+| Action | Home Team | Away Team |
+|--------|-----------|-----------|
+| Move | WASD | Arrow Keys |
+| Pass/Shoot | Space (hold for power) | Enter (hold for power) |
+| Through Ball | Q | - |
+| Sprint | E | Shift |
+| Switch Player | R | / |
+| Pause | ESC | ESC |
+
+## Architecture
+
+```
+Player 1 (Host)          Server (Node.js)          Player 2 (Guest)
+     |                         |                          |
+     |---- inputs (20Hz) ----->|                          |
+     |                         |---- relay inputs ------->|
+     |                         |                          |
+     |<--- ball sync (10Hz) ---|---- ball sync ---------->|
+     |                         |                          |
+     |<--- goal events --------|---- goal events -------->|
+```
+
+- **Input relay**: 20Hz - Your controls are sent to opponent in real-time
+- **Ball sync**: 10Hz - Server authoritatively syncs ball position
+- **Goal authority**: Server validates all goals to prevent cheating
+- **Latency display**: Real-time ping shown in HUD
+
+## Troubleshooting
+
+**"Failed to connect"**
+- Make sure the server is running (`npm start`)
+- Check Windows Firewall / antivirus is not blocking port 3000
+- Verify both devices are on the same network
+- Try using the exact IP from `ipconfig`
+
+**"Connection lost during match"**
+- Server went down or network interrupted
+- Game auto-returns to menu
+
+**High ping / lag**
+- Use 5GHz WiFi instead of 2.4GHz
+- Close other apps using bandwidth
+- Move closer to the router
+- For best results, use LAN cable on host PC
+
+## Deploy to GitHub Pages (Client Only)
+
+You can host the HTML client on GitHub Pages for easy access:
+
+1. Create a GitHub repo
+2. Upload `efootball_online.html` and rename to `index.html`
+3. Enable GitHub Pages in Settings
+4. Players access the client via the GitHub Pages URL
+5. They still connect to YOUR server IP for multiplayer
+
+This way you don't need to host the HTML file - only the Node.js server.
+'''
+
+with open('/mnt/agents/output/package.json', 'w') as f:
+    f.write(package_json)
+
+with open('/mnt/agents/output/README.md', 'w') as f:
+    f.write(readme)
+
+print("All files created successfully!")
+print("\nFiles:")
+print("  - efootball_online.html (client)")
+print("  - server.js (Node.js WebSocket server)")
+print("  - package.json (dependencies)")
+print("  - README.md (setup guide)")
